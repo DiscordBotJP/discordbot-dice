@@ -20,6 +20,8 @@ class GuildDashboardSetting:
     interval_minutes: int
     anchor_time: str
     timezone: str
+    max_dice_rolls: int
+    max_dice_sides: int
 
 
 class DashboardSettings:
@@ -43,6 +45,8 @@ class DashboardSettings:
             interval_minutes=int(raw.get('intervalMinutes') or 0),
             anchor_time=str(raw.get('anchorTime') or '00:00'),
             timezone=str(raw.get('timezone') or 'Asia/Tokyo'),
+            max_dice_rolls=_clamp_int(raw.get('maxDiceRolls'), 1, 100, 100),
+            max_dice_sides=_clamp_int(raw.get('maxDiceSides'), 2, 10000, 10000),
         )
 
 
@@ -101,3 +105,11 @@ async def fetch_dashboard_settings() -> DashboardSettings:
 def _sign(value: str, secret: str) -> str:
     digest = hmac.new(secret.encode(), value.encode(), hashlib.sha256).digest()
     return base64.urlsafe_b64encode(digest).decode().rstrip('=')
+
+
+def _clamp_int(value: Any, minimum: int, maximum: int, fallback: int) -> int:
+    try:
+        numeric = int(value)
+    except (TypeError, ValueError):
+        return fallback
+    return max(minimum, min(maximum, numeric))

@@ -33,10 +33,17 @@ class NDNDiceCog(commands.Cog):
             interval_seconds = dashboard_setting.interval_minutes * 60
             if interval_seconds > 0 and time.monotonic() - last_response_at < interval_seconds:
                 return
+        else:
+            dashboard_setting = None
 
         m, n = map(int, match.groups())
-        if m > 100 or n > 10000:
-            await message.reply('10000面100回(100d10000)以上は対応していません。')
+        max_rolls = dashboard_setting.max_dice_rolls if dashboard_setting else 100
+        max_sides = dashboard_setting.max_dice_sides if dashboard_setting else 10000
+        if m < 1 or n < 2:
+            await message.reply('1回以上、2面以上の NdN 形式で指定してください。')
+            return
+        if m > max_rolls or n > max_sides:
+            await message.reply(f'{max_sides}面{max_rolls}回({max_rolls}d{max_sides})まで対応しています。')
             return
         rolls = [randint(1, n) for _ in range(m)]
         roll_sum = sum(rolls)
